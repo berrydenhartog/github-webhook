@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dpl
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: github-webhook
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: github-webhook-image
+          name: github-webhook
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: CLIENT_ID
+              value: mattermost
+            - name: CLIENT_URL
+              valueFrom:
+                secretKeyRef:
+                  name: github-webhook-secret
+                  key: CLIENT_URL
+            - name: GITHUB_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: github-webhook-secret
+                  key: GITHUB_WEBHOOK_SECRET
+          resources:
+            limits:
+              cpu: 700m
+              memory: 128Mi
+              ephemeral-storage: "2Gi"
+            requests:
+              cpu: 500m
+              memory: 64Mi
+              ephemeral-storage: "2Gi"
+          livenessProbe:
+            initialDelaySeconds: 10
+            httpGet:
+              path: /health
+              port: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000

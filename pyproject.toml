@@ -1,0 +1,44 @@
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+src = ["app","tests"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.ruff.lint]
+select = ["I", "SIM", "B", "UP", "F", "E", "S", "C90", "DTZ", "LOG", "PIE", "PT", "ERA", "W", "C", "TRY", "RUF", "ANN"]
+fixable = ["ALL"]
+task-tags = ["TODO"]
+ignore = ["TRY003", "ANN101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**.py" = ["S101", "ANN201"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 8
+
+
+[tool.pyright]
+pythonVersion = "3.12"
+typeCheckingMode = "strict"
+reportMissingImports = true
+reportMissingTypeStubs = true
+
+
+[tool.coverage.run]
+branch = true
+command_line = "-m pytest"
+relative_files = true
+omit = [
+    "tests/*"
+]
+
+[tool.coverage.report]
+fail_under = 95
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests"
+]
+addopts = "--strict-markers"

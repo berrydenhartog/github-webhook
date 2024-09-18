@@ -1,0 +1,9 @@
+.venv
+__pycache__
+.ruff_cache
+.pytest_cache
+.coverage
+htmlcov/
+.DS_Store
+tests/github_data_examples/
+age-key.txt

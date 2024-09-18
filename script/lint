@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+set -x
+
+ruff check --fix "$@"
+
+if ! pyright; then
+    echo "Typecheck failed"
+    exit 1
+fi

@@ -1,0 +1,199 @@
+name: cicd
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE_NAME: berrydenhartog/github-webhook
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: run ruff
+        run: ruff check --output-format=github
+
+      - name: Run format
+        run: ruff format --check
+
+      - name: Run pyright
+        run: pyright
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - run: pip install -r requirements-dev.txt
+
+      - name: Run pytest
+        run: coverage run -m pytest
+
+      - name: run coverage report
+        run: coverage report
+
+      - name: run coverage html
+        run: coverage html
+
+      - name: Upload code coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: codecoverage-${{ github.run_id }}
+          path: htmlcov/
+          if-no-files-found: error
+          overwrite: true
+
+  build:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      security-events: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: get commit hash
+        id: get_commit_hash
+        run: |
+          echo "commit_hash=$(git describe --tags)" >> "$GITHUB_OUTPUT"
+
+      - name: Make changes to project to inject commit hash
+        run: |
+          sed -i 's/VERSION = .*$/VERSION = "${{ steps.get_commit_hash.outputs.commit_hash }}"/g' app/main.py
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+      # - name: Extract metadata for Docker without latest tag
+      #   id: meta2
+      #   uses: docker/metadata-action@v5
+      #   with:
+      #     images: ${{ env.IMAGE_NAME }}
+      #     flavor: |
+      #       latest=false
+      #   env:
+      #     DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          platforms: linux/amd64,linux/arm64,darwin/amd64
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
+
+
+      - name: Run Trivy vulnerability scanner sarif
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          scan-type: image
+          exit-code: 0
+          format: "sarif"
+          output: "trivy-results.sarif"
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Upload Trivy scan results to GitHub Security tab
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: "trivy-results.sarif"
+
+
+
+      - name: Run Trivy SBOM
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          scan-type: image
+          exit-code: 0
+          format: "cyclonedx"
+          output: "trivy-sbom.json"
+          list-all-pkgs: "true"
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy license scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
+          scan-type: image
+          scanners: "license"
+          exit-code: 0
+          output: "trivy-license.json"
+        env:
+          TRIVY_USERNAME: ${{ github.actor }}
+          TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload SBOM & License
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-licence-${{ github.run_id }}.json
+          path: |
+            trivy-sbom.json
+            trivy-license.json
+          if-no-files-found: error
+          overwrite: true
