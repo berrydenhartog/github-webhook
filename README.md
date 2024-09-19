@@ -1,60 +1,38 @@
-# Github webhook middleware
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/berrydenhartog/github-webhook/cicd.yml?label=tests)
-![GitHub Release](https://img.shields.io/github/v/release/berrydenhartog/github-webhook?include_prereleases&sort=semver)
-![GitHub License](https://img.shields.io/github/license/berrydenhartog/github-webhook)
+# GitHub Webhook
 
-The Github Webhook middleware allows you to convert and send [github event webhooks](https://docs.github.com/en/webhooks/webhook-events-and-payloads)  to another system like a postgresql, file, mongodb, mattermost, slack etc.
+| | |
+|---|---|
+|Project|![GitHub Release](https://img.shields.io/github/v/release/berrydenhartog/github-webhook?include_prereleases&sort=semver) ![GitHub License](https://img.shields.io/github/license/berrydenhartog/github-webhook)|
+|Quality|![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/berrydenhartog/github-webhook/cicd.yml?label=tests)|
+|Community|![GitHub contributors](https://img.shields.io/github/contributors/berrydenhartog/github-webhook)|
+|Maintainers|[![LinkedIn](https://img.shields.io/badge/-LinkedIn-black.svg?logo=linkedin&colorB=555)](https://www.linkedin.com/in/berry-denhartog/)|
 
-## How to use github webhook middleware
+The GitHub Webhook middleware enables seamless integration by transforming and forwarding [GitHub event](https://docs.github.com/en/webhooks/webhook-events-and-payloads) webhooks to various systems such as PostgreSQL, file storage, MongoDB, Mattermost, Slack, Logstash, and more.
 
-To use this application you need to deploy this application and configure github. The application is already packaged for you and available on [dockerhub](https://hub.docker.com/repository/docker/berrydenhartog/github-webhook) as a container.
+## Why is this usefull
+
+This project was originally designed to link GitHub projects with  Mattermost. However, during development, I expanded its functionality to address a wider range of needs. Now, it can connect GitHub webhooks to various systems and platforms, making it versatile for multiple use cases beyond just chat integration.
+
+This product can now:
+
+1. process github events and other events
+2. filter events
+3. transform structured json message to custom message
+4. send custom message to other systems.
+
+## How to use
+
+To use this application, simply deploy the pre-packaged container and configure your GitHub repository to send webhooks. The application is ready to go and available on [Docker hub](https://hub.docker.com/r/berrydenhartog/github-webhook).
+
+### App Config
+
+This application is configured using environment variables and/or YAML files, which control both the application's behavior and client settings. Each system you wish to connect to has its own dedicated YAML configuration file. By default, the application uses a dummy client, which discards incoming messages.
+
+See [options](/docs/options.md) for all application options. For client settings see the specific [clients](#clients) documentation.
 
 
-### Configuring Application
-
-This application uses environmental variables and/or yaml files to configure how the application behaves.
-
-See [options](/docs/options.md) for all general options. For detailed options for every client see the [clients](#clients) documentation
-
-### deploy application
-
-Since the application is packaged as a container you can use allot of methods to deploy the application. We will explain 2.
-
-1. running locally with docker compose
-2. running in kubernetes with kustomize
-
-#### docker compose
-
-To run locally you can use the example [compose.yaml](compose.yaml)
-
-```shell
-docker compose build
-docker compose up
-```
-
-This will rebuild the application an run it.
-
-If you make some small edits to the compose.yaml you can skip the build step. change the folloing:
-
-1. remove `build: .`
-2. change `image: berrydenhartog/github-webhook:dev` to `image: berrydenhartog/github-webhook:latest`
-
-By default the application is available on http://localhost:8000
-
-#### kustomize
-
-For an example of a kubernetes customize deployment see the [infra/](/infra/) folder.
-
-you can deploy the application by running:
-
-```shell
-kubectl apply -k infra/overlays/production
-```
-
-You will propably need to make a few changes to the files to make it work for you.
-
-### Configuring github
+### GitHub config
 
 After you have deployed this application you need to configure the github webhook. This can be done one repository level or organisational level.
 
@@ -67,7 +45,7 @@ After you have deployed this application you need to configure the github webhoo
 5. configure:
     - 'Payload URL': to the url you deployed the application
     - 'Content type': to `Application/json`
-    - 'secret': to a random secret (make sure its the same as the variable GITHUB_WEBHOOK_SECRET)
+    - 'secret': to a random secret (make sure its the same as the variable WEBHOOK_SECRET)
     - select which events you want to receive.
 6. Click `Add webhook` button
 7. verify correct configuration by checking `Recent Deliveries ` under the webhook config
@@ -81,10 +59,14 @@ After you have deployed this application you need to configure the github webhoo
 5. configure:
     - 'Payload URL': to the url you deployed the application
     - 'Content type': to `Application/json`
-    - 'secret': to a random secret (make sure its the same as the variable GITHUB_WEBHOOK_SECRET)
+    - 'secret': to a random secret (make sure its the same as the variable WEBHOOK_SECRET)
     - select which events you want to receive.
 6. Click `Add webhook` button
 7. verify correct configuration by checking `Recent Deliveries ` under the webhook config
+
+### Deploy
+
+See [deploy](/docs/deploy.md)
 
 ## Clients
 
@@ -92,6 +74,7 @@ You can develop your own client or use one of the exising clients.
 
 - [mattermost](./docs/mattermost-client.md): sends the event to a mattermost webhook
 - [dummy](./docs/dummy-client.md): Does nothing with the event. DEFAULT
+- todo: add more
 
 If you would like to add another client see the [How to Contribute](#How to Contribute)
 
@@ -101,4 +84,4 @@ See [Contributing](CONTRIBUTING.md)
 
 ## For developers
 
-See [Contributing](/docs/developers.md)
+See [developers](/docs/developers.md)

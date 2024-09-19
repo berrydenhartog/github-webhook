@@ -11,10 +11,7 @@ repos:
     - id: check-shebang-scripts-are-executable
     - id: check-toml
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  # Ruff version.
-  rev: v0.6.5
+  rev: v0.6.6
   hooks:
-    # Run the linter.
     - id: ruff
-    # Run the formatter.
     - id: ruff-format

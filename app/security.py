@@ -5,17 +5,21 @@ from collections.abc import Awaitable, Callable
 
 from fastapi import Request, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import Response
 
 logger = logging.getLogger(__name__)
 
 
 def verify_signature(
-    func: Callable[[Request], Awaitable[JSONResponse]],
-) -> Callable[[Request], Awaitable[JSONResponse]]:
-    async def wrapper(request: Request) -> JSONResponse:
+    func: Callable[[Request], Awaitable[Response]],
+) -> Callable[[Request], Awaitable[Response]]:
+    async def wrapper(request: Request) -> Response:
         payload_body = await request.body()
         secret_token = request.app.state.secret_token
+
+        if not secret_token:
+            return await func(request)
+
         signature_header = request.headers.get("x-hub-signature-256")
 
         if not signature_header:

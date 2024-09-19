@@ -4,11 +4,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from .clients import client_factory
 from .config import get_settings
-from .github import DEFAULT_EVENT_HANDLERS, handle_unknown_event
+from .constants import DEFAULT_EVENT_FORMATS
+from .eventhandlers import DEFAULT_EVENT_HANDLERS, handle_filter_event, handle_format_event, handle_unknown_event
 from .log import setup_logging
 from .security import verify_signature
 
@@ -22,42 +23,55 @@ def create_app() -> FastAPI:
     logger = logging.getLogger(__name__)
 
     @asynccontextmanager
-    async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
-        logger.info(f"Application {VERSION} starting")
-        logger.info(f"Debug mode: {settings.DEBUG}")
+    async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+        app.state.secret_token = settings.WEBHOOK_SECRET
+        app.state.clients = client_factory(settings.CLIENT_IDS)
+        app.state.event_header = settings.EVENT_HEADER
+        app.state.event_formats = DEFAULT_EVENT_FORMATS | settings.EVENT_FORMATS
+        app.state.event_filters = settings.EVENT_FILTERS
+
+        if not app.state.secret_token:
+            logger.warning("Webhook secret disabled. This is unsafe!")
+
+        logger.info(f"Version:       {VERSION}")
+        logger.info(f"Debug:         {settings.DEBUG}")
         logger.info(f"Logging level: {settings.LOGGING_LEVEL}")
-        logger.info(f"Client id: {settings.CLIENT_ID}")
+        logger.info(f"Client IDs:    {settings.CLIENT_IDS}")
+        logger.info(f"Event header:  {settings.EVENT_HEADER}")
         yield
-        logger.info(f"Application {VERSION} closing")
+        logger.info("Closing app")
 
     app = FastAPI(lifespan=lifespan, openapi_url=None, debug=settings.DEBUG)
-    app.state.secret_token = settings.GITHUB_WEBHOOK_SECRET
-    app.state.client = client_factory(settings.CLIENT_ID, str(settings.CLIENT_URL))
 
     @app.post("/", status_code=status.HTTP_204_NO_CONTENT)
     @verify_signature
-    async def github_webhook(request: Request) -> JSONResponse:  # type: ignore
-        github_event = request.headers.get("x-github-event", "unknown")
+    async def webhook(request: Request) -> Response:  # type: ignore
+        event_type = request.headers.get(app.state.event_header, "unknown")
         content_type = request.headers.get("content-type")
 
-        logger.debug(f"Received event {github_event}")
-        logger.debug(f"Received contenttype {content_type}")
+        logger.debug(f"Received event-type: {event_type}")
+        logger.debug(f"Received content-type: {content_type}")
 
         if content_type != "application/json":
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid content type")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid content-type")
 
         json_data = await request.json()
 
         logger.debug(f"request data: {json_data}")
 
-        handler = DEFAULT_EVENT_HANDLERS.get(github_event, handle_unknown_event)
-        await handler(github_event, app.state.client, json_data)
+        filter = await handle_filter_event(event_type, app.state.event_filters, json_data)
+        if filter:
+            logger.debug(f"Event {event_type} filtered out")
+            return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "filtered"})
 
-    @app.get("/health")
-    async def health_check() -> JSONResponse:  # type: ignore
-        return JSONResponse(
-            content={"status": "ok"},
-        )
+        msg = await handle_format_event(event_type, app.state.event_formats, json_data)
+
+        handler = DEFAULT_EVENT_HANDLERS.get(event_type, handle_unknown_event)
+        await handler(event_type, app.state.clients, msg)
+
+    @app.get("/health", status_code=status.HTTP_200_OK)
+    async def health() -> Response:  # type: ignore
+        return JSONResponse(content={"status": "ok"})
 
     return app
 

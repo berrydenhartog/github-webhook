@@ -1,0 +1,5 @@
+infra/
+.vscode/
+docs/
+script/
+tests/

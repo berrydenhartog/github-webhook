@@ -1,11 +1,10 @@
 import logging
 
 import httpx
-from pydantic import BaseModel, field_validator, model_validator
+from pydantic import BaseModel, field_validator
 from pydantic.networks import HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from ..contants import GITHUB_EVENTS
 from .baseclient import BaseClient
 
 logger = logging.getLogger(__name__)
@@ -18,13 +17,7 @@ class MattermostclientSettings(BaseSettings):
 
     DEFAULT_CHANNEL: str | None = None
     EVENT_CHANNEL_MAPPING: dict[str, str] = {}
-
-    @model_validator(mode="after")
-    def _enforce_allowed_logging_levels(self: "MattermostclientSettings") -> "MattermostclientSettings":
-        for event in self.EVENT_CHANNEL_MAPPING:
-            if event not in GITHUB_EVENTS:
-                raise Exception(f"Invalid event type {event} in MATTERMOST_EVENT_CHANNEL_MAPPING")  # noqa: TRY002
-        return self
+    URL: HttpUrl
 
 
 class MattermostWebhookModel(BaseModel):
@@ -54,11 +47,10 @@ class MattermostWebhookModel(BaseModel):
 
 
 class MattermostClient(BaseClient):
-    def __init__(self, url: str, retries: int = 5, timeout: int = 1) -> None:
-        self.url = url
+    def __init__(self, retries: int = 5, timeout: int = 1) -> None:
+        self.settings = MattermostclientSettings()  # type: ignore
         self.transport = httpx.AsyncHTTPTransport(retries=retries)
         self.client = httpx.AsyncClient(transport=self.transport, timeout=timeout)
-        self.settings = MattermostclientSettings()
 
     async def handle_event(self, event: str, data: str) -> None:
         channel = None
@@ -72,7 +64,7 @@ class MattermostClient(BaseClient):
 
         logger.debug(f"Sending message to Mattermost: {mater_most_model.model_dump()}")
 
-        response = await self.client.post(self.url, json=mater_most_model.model_dump())
+        response = await self.client.post(str(self.settings.URL), json=mater_most_model.model_dump())
 
         logger.debug(f"Response from Mattermost: {response.status_code}")
 

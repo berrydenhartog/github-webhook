@@ -5,8 +5,8 @@ FROM --platform=$BUILDPLATFORM python:${PYTHON_VERSION}
 LABEL maintainer=berrydenhartog \
     organization=berrydenhartog \
     license=MIT \
-    org.opencontainers.image.description="Github to mattermost webhook" \
-    org.opencontainers.image.source=https://github.com/berrydenhartog/github-mattermost \
+    org.opencontainers.image.description="Github webhook event processor" \
+    org.opencontainers.image.source=https://github.com/berrydenhartog/github-webhook \
     org.opencontainers.image.licenses=MIT
 
 ENV PYTHONUNBUFFERED=1 \
@@ -16,6 +16,6 @@ ENV PYTHONUNBUFFERED=1 \
 WORKDIR /app
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app/ /app/mattermost_github
+COPY app/ /app/github_webhook
 EXPOSE 8000
-CMD ["uvicorn", "mattermost_github.main:app", "--host", "0.0.0.0", "--app-dir", "/app/", "--port", "8000"]
+CMD ["uvicorn", "github_webhook.main:app", "--host", "0.0.0.0", "--app-dir", "/app/", "--port", "8000"]

@@ -1,39 +1,95 @@
+import asyncio
+import contextlib
 import logging
+import re
 from collections.abc import Awaitable, Callable
+from typing import Any
 
+import jq
 from fastapi import HTTPException, status
 
 from .clients import BaseClient
-from .contants import DEFAULT_EVENT_DESCRIPTIONS
+from .constants import FilterType, PermissionType
 
 logger = logging.getLogger(__name__)
 
 
-async def handle_generic_event(event: str, client: BaseClient, data: dict[str, str | object]) -> None:
-    template = DEFAULT_EVENT_DESCRIPTIONS.get(event)
+def is_regex(value: str) -> bool:
+    try:
+        re.compile(value)
+    except re.error:
+        return False
+    return True
 
-    logger.debug(f"Event {event} template: {template}")
 
-    if not template:  # pragma: no cover
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unknown event type {event}")
+def filter_event(filters: dict[PermissionType, list[dict[FilterType, Any]]], data: dict[str, Any]) -> bool:  # noqa: C901
+    allow_filter = filters.get("ALLOW", [])
+    deny_filter = filters.get("DENY", [])
+
+    for filter in allow_filter:
+        jq_filter = filter.get("FILTER")
+        value = filter.get("VALUE")
+        with contextlib.suppress(Exception):
+            result = jq.compile(jq_filter).input(data).first()  # type: ignore
+            if isinstance(value, str) and is_regex(value):
+                if re.match(rf"{value}", result):  # type: ignore
+                    return False
+            else:
+                if result == value:
+                    return False
+
+    for filter in deny_filter:
+        jq_filter = filter.get("FILTER")
+        value = filter.get("VALUE")
+        with contextlib.suppress(Exception):
+            result = jq.compile(jq_filter).input(data).first()  # type: ignore
+            if isinstance(value, str) and is_regex(value):
+                if re.match(value, result):  # type: ignore
+                    return True
+            else:
+                if result == value:
+                    return True
+
+    return False
+
+
+async def handle_filter_event(
+    event_type: str,
+    filters: dict[PermissionType, list[dict[FilterType, int | str | bool | float]]],
+    data: dict[str, str | object],
+) -> bool:
+    return filter_event(filters, data)
+
+
+async def handle_format_event(event_type: str, event_formats: dict[str, str], data: dict[str, str | object]) -> str:
+    template = event_formats.get(event_type)
+
+    logger.debug(f"Event {event_type} template: {template}")
 
     try:
-        msg = template.format(**data)
+        msg = template.format(**data) if template else str(data)
     except KeyError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Missing data for event {event}: {e}"
+            status_code=status.HTTP_400_BAD_REQUEST, detail=f"Missing data for event {event_type}: {e}"
         ) from e
 
-    logger.debug(f"Event {event} parsed mesage: {msg}")
-
-    await client.handle_event(event, msg)
+    return msg
 
 
-async def handle_unknown_event(event: str, _client: BaseClient, data: dict[str, str | object]) -> None:
+async def handle_generic_event(event_type: str, clients: list[BaseClient], data: str) -> None:
+    logger.debug(f"Event {event_type} parsed mesage: {data}")
+
+    tasks = [client.handle_event(event_type, data) for client in clients]
+    await asyncio.gather(*tasks)
+
+
+async def handle_unknown_event(event: str, client: list[BaseClient], data: str) -> None:
     logger.warning(f"Unknown event {event}: {data}")
 
+    await handle_generic_event(event, client, data)
 
-DEFAULT_EVENT_HANDLERS: dict[str, Callable[[str, BaseClient, dict[str, str | object]], Awaitable[None]]] = {
+
+DEFAULT_EVENT_HANDLERS: dict[str, Callable[[str, list[BaseClient], str], Awaitable[None]]] = {
     "branch_protection_configuration": handle_generic_event,
     "branch_protection_rule": handle_generic_event,
     "check_run": handle_generic_event,

@@ -14,7 +14,7 @@ class CustomTestClient(TestClient):
         super().__init__(app, *args, **kwargs)  # type: ignore
         self.secret_token = secret_token
 
-    def request(  # type: ignore[override]
+    def request(  # type: ignore[override]  # noqa: C901
         self,
         method: str,
         url: httpx._types.URLTypes,  # type: ignore
@@ -50,17 +50,23 @@ class CustomTestClient(TestClient):
         if data is not None or content is not None:
             payload_body = data if data is not None else content
 
-            if isinstance(payload_body, bytes):
-                # Calculate the hash
-                hash_object = hmac.new(self.secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha256)
-                expected_signature = "sha256=" + hash_object.hexdigest()
+            if isinstance(payload_body, str):
+                payload_body = payload_body.encode("utf-8")
 
-                # Add the hash to the headers
-                if headers is None:
-                    headers = {}
+                # Ensure payload_body is bytes
+            if not isinstance(payload_body, bytes):
+                raise TypeError("payload_body must be bytes")
 
-                if "x-hub-signature-256" not in headers:
-                    headers.update({"x-hub-signature-256": expected_signature})
+            # Calculate the hash
+            hash_object = hmac.new(self.secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha256)
+            expected_signature = "sha256=" + hash_object.hexdigest()
+
+            # Add the hash to the headers
+            if headers is None:
+                headers = {}
+
+            if "x-hub-signature-256" not in headers:
+                headers.update({"x-hub-signature-256": expected_signature})
 
         return super().request(
             method,

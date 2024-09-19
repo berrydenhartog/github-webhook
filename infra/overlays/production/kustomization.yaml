@@ -19,7 +19,7 @@ patches:
     patch: |
       - op: replace
         path: /spec/rules/0/host
-        value: github-mattermost.apps.digilab.network
+        value: github-webhook.apps.digilab.network
       - op: replace
         path: /spec/tls/0/hosts/0
-        value: github-mattermost.apps.digilab.network
+        value: github-webhook.apps.digilab.network

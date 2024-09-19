@@ -1,10 +1,10 @@
 # Developers
 
-This application is developer in python 3 with fastapi. It uses a webhook endpoint at / that received all github webhook events.
+This application is developed in python 3 with fastapi. It uses a webhook endpoint at / that received all github webhook events.
 
-The webhook events are processed and converted to a message. See [constatn.py](/app/contants.py) for the default conversion. after converting the github webhook event to a message the message is send to one of the clients for further handling. Depending on the client the message can be processed differenlty.
+The webhook events are filters and converted to a message. See [constants.py](../blob/main/app/contants.py) for the default conversion. After converting the github webhook event to a message the message is send to one or more of the clients for further handling. Depending on the client the message can be processed differenlty.
 
-## Starting the application
+## Developing
 
 To start the application you first need to install python3 and all dependencies. We assume you have python3 installed. If not see the python3 documentation.
 
@@ -29,7 +29,7 @@ fastapi run app/main.py
 
 ## pre-commit
 
-We recommend using the pre-commit feature to have a standardized setup. Precommit does not check all things the CI/CD does but it does some.
+We recommend using the pre-commit application when developing to standarize the development rules. Pre-commit does not check all things the CI/CD does but it does some.
 
 to enable pre-commit do the following:
 
@@ -37,7 +37,7 @@ to enable pre-commit do the following:
 pre-comit install
 ```
 
-Now, every time you do a git commit the pre-commit hooks will do validation of your files. Note: it does not run pyright.
+Now, every time you do a `git commit` the pre-commit hooks will do validation of your files. Note: it does not run pyright.
 
 ## formatting, linting & testing
 
@@ -52,3 +52,15 @@ To run the formatting, linting and testing execute the following scripts:
 ./script/lint
 ./script/test
 ```
+
+We  currenlty require a high code coverage. So make sure you add tests when you create a client.
+
+## Creating a new client
+
+The steps to create a new client are faily simple.
+
+1. copy the [dummy client](../blob/main/app/clients/dummy.py) in the app/clients/ folder.
+2. change the [dummy client](../blob/main/app/clients/factory.py) to include the client with a special client_id
+3. configure the application to use the client_id by setting the config CLIENT_IDS
+
+after you the client does what you want add a test in tests/clients/ and write some documentation for the client in /docs/. After you are done create a PR in the github repository. Now just wait for it to be approved :D.

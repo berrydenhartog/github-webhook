@@ -1,4 +1,5 @@
 import logging
+from typing import Literal
 
 from ..exceptions import MyappValueClientError
 from .baseclient import BaseClient
@@ -7,13 +8,23 @@ from .mattermost import MattermostClient
 
 logger = logging.getLogger(__name__)
 
+Clients = Literal["mattermost", "dummy"]
 
-def client_factory(client_type: str, url: str) -> BaseClient:
-    logger.debug(f"Creating client of type {client_type}")
 
-    if client_type == "mattermost":
-        return MattermostClient(url=url)
-    elif client_type == "dummy":
-        return DummyClient()
-    else:  # pragma: no cover
-        raise MyappValueClientError(client_type)
+def client_factory(client_ids: Clients | list[Clients]) -> list[BaseClient]:
+    logger.debug(f"Creating client of type {client_ids}")
+
+    if not isinstance(client_ids, list):
+        client_ids = [client_ids]
+
+    clients: list[BaseClient] = []
+
+    for client_id in client_ids:
+        if client_id == "mattermost":
+            clients.append(MattermostClient())
+        elif client_id == "dummy":
+            clients.append(DummyClient())
+        else:  # pragma: no cover
+            raise MyappValueClientError(str(client_ids))
+
+    return clients

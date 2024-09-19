@@ -6,7 +6,7 @@ from pytest_mock import MockerFixture
 TEST_URL: str = "https://httpbin.org/post"
 
 
-@pytest.mark.parametrize("client", [{"CLIENT_ID": "mattermost", "CLIENT_URL": TEST_URL}], indirect=True)
+@pytest.mark.parametrize("client", [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
 def test_mattermostclient_with_projects_v2_event(client: TestClient, mocker: MockerFixture) -> None:
     # given
     body = {"name": "Foo", "description": "Some description", "price": 5.5}
@@ -24,7 +24,7 @@ def test_mattermostclient_with_projects_v2_event(client: TestClient, mocker: Moc
     patch.assert_called_once()
 
 
-@pytest.mark.parametrize("client", [{"CLIENT_ID": "mattermost", "CLIENT_URL": TEST_URL}], indirect=True)
+@pytest.mark.parametrize("client", [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
 def test_mattermostclient_with_projects_v2_even_failed(
     client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -46,7 +46,9 @@ def test_mattermostclient_with_projects_v2_even_failed(
 
 
 @pytest.mark.parametrize(
-    "client", [{"CLIENT_ID": "mattermost", "CLIENT_URL": TEST_URL, "MATTERMOST_DEFAULT_CHANNEL": "test"}], indirect=True
+    "client",
+    [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL, "MATTERMOST_DEFAULT_CHANNEL": "test"}],
+    indirect=True,
 )
 def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixture) -> None:
     # given
@@ -71,8 +73,8 @@ def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixtu
     "client",
     [
         {
-            "CLIENT_ID": "mattermost",
-            "CLIENT_URL": TEST_URL,
+            "CLIENT_IDS": "mattermost",
+            "MATTERMOST_URL": TEST_URL,
             "MATTERMOST_DEFAULT_CHANNEL": "test",
             "MATTERMOST_EVENT_CHANNEL_MAPPING": '{"projects_v2":"test3"}',
         }
@@ -102,8 +104,8 @@ def test_mattermostclient_eventchannelmapping(client: TestClient, mocker: Mocker
     "client",
     [
         {
-            "CLIENT_ID": "mattermost",
-            "CLIENT_URL": TEST_URL,
+            "CLIENT_IDS": "mattermost",
+            "MATTERMOST_URL": TEST_URL,
             "MATTERMOST_DEFAULT_CHANNEL": "test",
             "MATTERMOST_EVENT_CHANNEL_MAPPING": '{"NONEXISTING":"test3"}',
         }
