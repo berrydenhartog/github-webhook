@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 
 from .clients import client_factory
 from .config import get_settings
@@ -17,12 +17,13 @@ from .eventhandlers import (
     handle_unknown_event,
 )
 from .log import setup_logging
+from .middleware.security import SecurityMiddleware
 from .security import verify_signature
 
 VERSION = "dev"
 
 
-def create_app() -> FastAPI:
+def create_app() -> FastAPI:  # noqa: C901
     settings = get_settings()  # type: ignore[reportCallIssue]
 
     setup_logging(settings.LOGGING_LEVEL)
@@ -53,6 +54,8 @@ def create_app() -> FastAPI:
         logger.info("Closing app")
 
     app = FastAPI(lifespan=lifespan, openapi_url=None, debug=settings.DEBUG)
+
+    app.add_middleware(SecurityMiddleware)
 
     @app.post("/", status_code=status.HTTP_204_NO_CONTENT)
     @verify_signature
@@ -88,6 +91,12 @@ def create_app() -> FastAPI:
     @app.get("/health", status_code=status.HTTP_200_OK)
     async def health() -> Response:  # type: ignore
         return JSONResponse(content={"status": "ok"})
+
+    @app.get("/robots.txt", response_class=PlainTextResponse)
+    async def robots_txt() -> PlainTextResponse:  # type: ignore
+        content = """User-agent: *
+Disallow: /"""
+        return PlainTextResponse(content=content)
 
     return app
 

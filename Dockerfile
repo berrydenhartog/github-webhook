@@ -18,4 +18,4 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ /app/github_webhook
 EXPOSE 8000
-CMD ["uvicorn", "github_webhook.main:app", "--host", "0.0.0.0", "--app-dir", "/app/", "--port", "8000"]
+CMD ["uvicorn", "github_webhook.main:app", "--host", "0.0.0.0", "--app-dir", "/app/", "--port", "8000", "--no-server-header"]
