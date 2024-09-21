@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     EVENT_FORMATS: dict[str, str] = {}
     EVENT_HEADER: str = "x-github-event"
     EVENT_FILTERS: dict[PermissionType, list[dict[FilterType, int | str | bool | float]]] = {}
+    EVENT_TYPE_FILTERS: dict[PermissionType, list[str]] = {}
 
     @model_validator(mode="after")
     def _enforce_allowed_logging_levels(self: "Settings") -> "Settings":

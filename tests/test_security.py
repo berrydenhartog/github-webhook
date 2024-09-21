@@ -3,14 +3,14 @@ from fastapi.testclient import TestClient
 
 
 def test_security_validhash(client: TestClient) -> None:
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
     response = client.request("POST", "/", json=body, headers=headers)
     assert response.status_code == 204
 
 
 def test_security_invalidhash(client: TestClient) -> None:
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2", "x-hub-signature-256": "wronghash"}
     response = client.request("POST", "/", json=body, headers=headers)
     assert response.status_code == 403
@@ -19,7 +19,7 @@ def test_security_invalidhash(client: TestClient) -> None:
 
 def test_security_nosecret(client: TestClient) -> None:
     client.app.state.secret_token = None  # type: ignore
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2", "x-hub-signature-256": "wronghash"}
     response = client.request("POST", "/", json=body, headers=headers)
     assert response.status_code == 204
@@ -27,7 +27,7 @@ def test_security_nosecret(client: TestClient) -> None:
 
 @pytest.mark.parametrize("client", [{"WEBHOOK_SECRET": ""}], indirect=True)
 def test_security_nosecret_env(client: TestClient) -> None:
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
     response = client.request("POST", "/", json=body, headers=headers)
     assert response.status_code == 204

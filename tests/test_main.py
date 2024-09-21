@@ -51,3 +51,51 @@ def test_post_with_wrong_contenttype(client: TestClient) -> None:
     response = client.request("POST", "/", content=body)
     assert response.status_code == 400
     assert response.json() == {"detail": "Invalid content-type"}
+
+
+@pytest.mark.parametrize(
+    "client",
+    [
+        {
+            "EVENT_TYPE_FILTERS": '{"ALLOW": ["delete"]}',
+        }
+    ],
+    indirect=True,
+)
+def test_post_with_filter_event_type_allow(client: TestClient) -> None:
+    body = {"sender": {"login": "123"}, "ref_type": "test", "ref": "test1", "repository": {"full_name": "123123"}}
+
+    response1 = client.request("POST", "/", json=body, headers={"x-github-event": "delete"})
+    response2 = client.request("POST", "/", json=body, headers={"x-github-event": "delete2"})
+    response3 = client.request("POST", "/", json=body, headers={"x-github-event": "delete3"})
+    response4 = client.request("POST", "/", json=body, headers={"x-github-event": "delete4"})
+    assert response1.status_code == 204
+    assert response2.status_code == 200
+    assert response2.json() == {"status": "filtered"}
+    assert response3.status_code == 200
+    assert response3.json() == {"status": "filtered"}
+    assert response4.status_code == 200
+    assert response4.json() == {"status": "filtered"}
+
+
+@pytest.mark.parametrize(
+    "client",
+    [
+        {
+            "EVENT_TYPE_FILTERS": '{"DENY": ["delete"]}',
+        }
+    ],
+    indirect=True,
+)
+def test_post_with_filter_event_type_deny(client: TestClient) -> None:
+    body = {"sender": {"login": "123"}, "ref_type": "test", "ref": "test1", "repository": {"full_name": "123123"}}
+
+    response1 = client.request("POST", "/", json=body, headers={"x-github-event": "delete"})
+    response2 = client.request("POST", "/", json=body, headers={"x-github-event": "delete2"})
+    response3 = client.request("POST", "/", json=body, headers={"x-github-event": "delete3"})
+    response4 = client.request("POST", "/", json=body, headers={"x-github-event": "delete4"})
+    assert response1.status_code == 200
+    assert response1.json() == {"status": "filtered"}
+    assert response2.status_code == 204
+    assert response3.status_code == 204
+    assert response4.status_code == 204
