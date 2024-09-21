@@ -13,6 +13,7 @@ The application can be configured using either environmental variables or a conf
 | EVENT_FORMATS  | dictionary describing how to format a dict to a message  | {}  |
 | EVENT_HEADER  | the header to extract the type of event  | x-github-event |
 | EVENT_FILTERS  | dictionary describing the filter to apply on the json data | {}  |
+| EVENT_TYPE_FILTERS  | dictionary describing the filter to apply on the event type from EVENT_HEADER | {}  |
 
 ## Client IDs
 
@@ -25,7 +26,35 @@ The webhook secret can be enabled or disabled, but it is strongly recommended to
 
 To verify a message to the endpoint we use the github hashing system. Check the [github docs](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries#python-example) on how the validation works.
 
-## Filtering
+## Filtering event type
+
+We've implemented an filtering system that allows you to filter based on the event type. The event type is extracted from a header. The header is set by the option EVENT_HEADER.
+
+There are ALLOW and DENY filters. You can specify either an ALLOW or DENY filter. A combination of the two is not recommended and the DENY will be ignored. If you only specify ALLOW we assume that you want to deny all other event-types.
+
+An example filter of an ALLOW only. This will deny all other events that do not adhere to the default
+
+```json
+{
+    "ALLOW": [
+        "projects_v2",
+        "projects_v2_item"
+    ]
+}
+```
+
+An example filter of an DENY only. This will deny only these events and allow all others.
+
+```json
+{
+    "DENY": [
+        "projects_v2",
+        "projects_v2_item"
+    ]
+}
+```
+
+## Filtering event data
 
 We've implemented an advanced filtering system that allows you to filter based on the entire JSON payload. This is achieved using [jq filters](https://jqlang.github.io/jq/manual/#basic-filters) combined with regular expression (Perl style) matching for precise control. to set a filter you need to configure the EVENT_FILTERS field.
 

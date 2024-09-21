@@ -9,7 +9,13 @@ from fastapi.responses import JSONResponse, Response
 from .clients import client_factory
 from .config import get_settings
 from .constants import DEFAULT_EVENT_FORMATS
-from .eventhandlers import DEFAULT_EVENT_HANDLERS, handle_filter_event, handle_format_event, handle_unknown_event
+from .eventhandlers import (
+    DEFAULT_EVENT_HANDLERS,
+    handle_filter_event,
+    handle_filter_event_type,
+    handle_format_event,
+    handle_unknown_event,
+)
 from .log import setup_logging
 from .security import verify_signature
 
@@ -29,6 +35,7 @@ def create_app() -> FastAPI:
         app.state.event_header = settings.EVENT_HEADER
         app.state.event_formats = DEFAULT_EVENT_FORMATS | settings.EVENT_FORMATS
         app.state.event_filters = settings.EVENT_FILTERS
+        app.state.event_type_filters = settings.EVENT_TYPE_FILTERS
 
         if not app.state.secret_token:
             logger.warning("Webhook secret disabled. This is unsafe!")
@@ -38,6 +45,10 @@ def create_app() -> FastAPI:
         logger.info(f"Logging level: {settings.LOGGING_LEVEL}")
         logger.info(f"Client IDs:    {settings.CLIENT_IDS}")
         logger.info(f"Event header:  {settings.EVENT_HEADER}")
+        logger.info(f"Event Filter Allow :  {len(settings.EVENT_FILTERS.get('ALLOW', []))}")
+        logger.info(f"Event Filter Deny :  {len(settings.EVENT_FILTERS.get('DENY', []))}")
+        logger.info(f"Event Filter Type Allow :  {len(settings.EVENT_TYPE_FILTERS.get('ALLOW', []))}")
+        logger.info(f"Event Filter Type Deny :  {len(settings.EVENT_TYPE_FILTERS.get('DENY', []))}")
         yield
         logger.info("Closing app")
 
@@ -58,6 +69,11 @@ def create_app() -> FastAPI:
         json_data = await request.json()
 
         logger.debug(f"request data: {json_data}")
+
+        filter_type = await handle_filter_event_type(event_type, app.state.event_type_filters)
+        if filter_type:
+            logger.debug(f"Event type {event_type} filtered out")
+            return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "filtered"})
 
         filter = await handle_filter_event(event_type, app.state.event_filters, json_data)
         if filter:

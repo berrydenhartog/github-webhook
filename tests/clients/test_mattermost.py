@@ -9,7 +9,7 @@ TEST_URL: str = "https://httpbin.org/post"
 @pytest.mark.parametrize("client", [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
 def test_mattermostclient_with_projects_v2_event(client: TestClient, mocker: MockerFixture) -> None:
     # given
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
     mock_response = mocker.Mock()
     mock_response.json.return_value = {"message": "Success"}
@@ -29,7 +29,7 @@ def test_mattermostclient_with_projects_v2_even_failed(
     client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
     # given
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
     mock_response = mocker.Mock()
     mock_response.json.return_value = {"message": "Success"}
@@ -52,7 +52,7 @@ def test_mattermostclient_with_projects_v2_even_failed(
 )
 def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixture) -> None:
     # given
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
     mock_response = mocker.Mock()
     mock_response.json.return_value = {"message": "Success"}
@@ -64,7 +64,7 @@ def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixtu
 
     # then
     assert response.status_code == 204
-    model = MattermostWebhookModel(text=" ", channel="test")
+    model = MattermostWebhookModel(text="asdfgsdf delete project_v2 test", channel="test")
     patch.assert_called_once()
     patch.assert_called_with(TEST_URL, json=model.model_dump())
 
@@ -83,7 +83,7 @@ def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixtu
 )
 def test_mattermostclient_eventchannelmapping(client: TestClient, mocker: MockerFixture) -> None:
     # given
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
     mock_response = mocker.Mock()
     mock_response.json.return_value = {"message": "Success"}
@@ -95,7 +95,7 @@ def test_mattermostclient_eventchannelmapping(client: TestClient, mocker: Mocker
 
     # then
     assert response.status_code == 204
-    model = MattermostWebhookModel(text=" ", channel="test3")
+    model = MattermostWebhookModel(text="asdfgsdf delete project_v2 test", channel="test3")
     patch.assert_called_once()
     patch.assert_called_with(TEST_URL, json=model.model_dump())
 

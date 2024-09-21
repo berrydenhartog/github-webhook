@@ -53,6 +53,19 @@ def filter_event(filters: dict[PermissionType, list[dict[FilterType, Any]]], dat
     return False
 
 
+async def handle_filter_event_type(event_type: str, filters: dict[PermissionType, list[str]]) -> bool:
+    allow_filter = filters.get("ALLOW", [])
+    deny_filter = filters.get("DENY", [])
+
+    if event_type in allow_filter:
+        return False
+
+    if len(allow_filter) > 0:
+        return True
+
+    return event_type in deny_filter
+
+
 async def handle_filter_event(
     event_type: str,
     filters: dict[PermissionType, list[dict[FilterType, int | str | bool | float]]],

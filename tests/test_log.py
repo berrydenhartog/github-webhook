@@ -19,7 +19,7 @@ def test_logging_level(client: TestClient, caplog: pytest.LogCaptureFixture) -> 
 @pytest.mark.parametrize("client", [{"LOGGING_LEVEL": "DEBUG"}], indirect=True)
 def test_logging_level_debug(client: TestClient, caplog: pytest.LogCaptureFixture) -> None:
     # given
-    body = {"name": "Foo", "description": "Some description", "price": 5.5}
+    body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
 
     # when
