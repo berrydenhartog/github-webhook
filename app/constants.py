@@ -48,7 +48,7 @@ DEFAULT_EVENT_FORMATS: dict[str, str] = {
     "project": "{sender[login]} {action} project {project[name]}",
     "project_column": "{sender[login]} {action} project column {project_column[name]}",
     "projects_v2": "{sender[login]} {action} project_v2 {projects_v2[title]}",
-    "projects_v2_item": "{sender[login]} {action} project item {project_v2_item[content_type]} for {projects_v2_item[content_node_id]}",  # noqa: E501
+    "projects_v2_item": "{sender[login]} {action} project item {projects_v2_item[content_type]} for {projects_v2_item[content_node_id]}",  # noqa: E501
     "projects_v2_status_update": "{sender[login]} {action} project status update",
     "public": "{sender[login]} publicized {repository[full_name]}",
     "pull_request": "{sender[login]} {action} pull #{pull_request[number]} in {repository[full_name]}",
