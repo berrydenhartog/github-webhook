@@ -4,7 +4,7 @@
 | | |
 |---|---|
 |Project|![GitHub Release](https://img.shields.io/github/v/release/berrydenhartog/github-webhook?include_prereleases&sort=semver) ![GitHub License](https://img.shields.io/github/license/berrydenhartog/github-webhook)|
-|Quality|![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/berrydenhartog/github-webhook/cicd.yml?label=tests)|
+|Quality|![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/berrydenhartog/github-webhook/cicd.yml?label=tests) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=berrydenhartog_github-webhook&metric=coverage)](https://sonarcloud.io/summary/new_code?id=berrydenhartog_github-webhook) [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=berrydenhartog_github-webhook&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=berrydenhartog_github-webhook) [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=berrydenhartog_github-webhook&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=berrydenhartog_github-webhook)|
 |Community|![GitHub contributors](https://img.shields.io/github/contributors/berrydenhartog/github-webhook)|
 |Maintainers|[![LinkedIn](https://img.shields.io/badge/-LinkedIn-black.svg?logo=linkedin&colorB=555)](https://www.linkedin.com/in/berry-denhartog/)|
 
