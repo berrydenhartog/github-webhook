@@ -81,6 +81,16 @@ jobs:
           if-no-files-found: error
           overwrite: true
 
+      - name: run coverage xml
+        run: coverage xml
+
+      - name: SonarCloud Scan
+        if: matrix.python-version == '3.12' && github.actor != 'dependabot[bot]'
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
   build:
     needs: [test, lint]
     runs-on: ubuntu-latest
@@ -123,16 +133,6 @@ jobs:
         env:
           DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
 
-      # - name: Extract metadata for Docker without latest tag
-      #   id: meta2
-      #   uses: docker/metadata-action@v5
-      #   with:
-      #     images: ${{ env.IMAGE_NAME }}
-      #     flavor: |
-      #       latest=false
-      #   env:
-      #     DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -159,12 +159,10 @@ jobs:
           TRIVY_USERNAME: ${{ github.actor }}
           TRIVY_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
 
-      # - name: Upload Trivy scan results to GitHub Security tab
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: "trivy-results.sarif"
-
-
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
 
       - name: Run Trivy SBOM
         uses: aquasecurity/trivy-action@master
