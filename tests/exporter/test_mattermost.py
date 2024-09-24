@@ -1,12 +1,12 @@
 import pytest
-from app.clients.mattermost import MattermostWebhookModel
+from app.exporter.mattermost import MattermostWebhookModel
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 
 TEST_URL: str = "https://httpbin.org/post"
 
 
-@pytest.mark.parametrize("client", [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
+@pytest.mark.parametrize("client", [{"EXPORTER_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
 def test_mattermostclient_with_projects_v2_event(client: TestClient, mocker: MockerFixture) -> None:
     # given
     body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
@@ -24,8 +24,8 @@ def test_mattermostclient_with_projects_v2_event(client: TestClient, mocker: Moc
     patch.assert_called_once()
 
 
-@pytest.mark.parametrize("client", [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
-def test_mattermostclient_with_projects_v2_even_failed(
+@pytest.mark.parametrize("client", [{"EXPORTER_IDS": "mattermost", "MATTERMOST_URL": TEST_URL}], indirect=True)
+def test_mattermostexporter_with_projects_v2_even_failed(
     client: TestClient, mocker: MockerFixture, caplog: pytest.LogCaptureFixture
 ) -> None:
     # given
@@ -47,10 +47,10 @@ def test_mattermostclient_with_projects_v2_even_failed(
 
 @pytest.mark.parametrize(
     "client",
-    [{"CLIENT_IDS": "mattermost", "MATTERMOST_URL": TEST_URL, "MATTERMOST_DEFAULT_CHANNEL": "test"}],
+    [{"EXPORTER_IDS": "mattermost", "MATTERMOST_URL": TEST_URL, "MATTERMOST_DEFAULT_CHANNEL": "test"}],
     indirect=True,
 )
-def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixture) -> None:
+def test_mattermostexporter_defaultchannel(client: TestClient, mocker: MockerFixture) -> None:
     # given
     body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
@@ -73,7 +73,7 @@ def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixtu
     "client",
     [
         {
-            "CLIENT_IDS": "mattermost",
+            "EXPORTER_IDS": "mattermost",
             "MATTERMOST_URL": TEST_URL,
             "MATTERMOST_DEFAULT_CHANNEL": "test",
             "MATTERMOST_EVENT_CHANNEL_MAPPING": '{"projects_v2":"test3"}',
@@ -81,7 +81,7 @@ def test_mattermostclient_defaultchannel(client: TestClient, mocker: MockerFixtu
     ],
     indirect=True,
 )
-def test_mattermostclient_eventchannelmapping(client: TestClient, mocker: MockerFixture) -> None:
+def test_mattermostexporter_eventchannelmapping(client: TestClient, mocker: MockerFixture) -> None:
     # given
     body = {"sender": {"login": "asdfgsdf"}, "action": "delete", "projects_v2": {"title": "test"}}
     headers = {"x-github-event": "projects_v2"}
@@ -104,7 +104,7 @@ def test_mattermostclient_eventchannelmapping(client: TestClient, mocker: Mocker
     "client",
     [
         {
-            "CLIENT_IDS": "mattermost",
+            "EXPORTER_IDS": "mattermost",
             "MATTERMOST_URL": TEST_URL,
             "MATTERMOST_DEFAULT_CHANNEL": "test",
             "MATTERMOST_EVENT_CHANNEL_MAPPING": '{"NONEXISTING":"test3"}',
@@ -113,7 +113,7 @@ def test_mattermostclient_eventchannelmapping(client: TestClient, mocker: Mocker
     indirect=True,
 )
 @pytest.mark.xfail(raises=Exception)
-def test_mattermostclient_eventchannelmapping_wrong(client: TestClient, mocker: MockerFixture) -> None:
+def test_mattermostexporter_eventchannelmapping_wrong(client: TestClient, mocker: MockerFixture) -> None:
     # given
     body = {"name": "Foo", "description": "Some description", "price": 5.5}
     headers = {"x-github-event": "projects_v2"}

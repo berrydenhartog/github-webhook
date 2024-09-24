@@ -2,7 +2,7 @@
 
 This application is developed in python 3 with fastapi. It uses a webhook endpoint at / that received all github webhook events.
 
-The webhook events are filters and converted to a message. See [constants.py](../blob/main/app/contants.py) for the default conversion. After converting the github webhook event to a message the message is send to one or more of the clients for further handling. Depending on the client the message can be processed differenlty.
+The webhook events are filters and converted to a message. See [constants.py](../blob/main/app/contants.py) for the default conversion. After converting the github webhook event to a message the message is send to one or more of the exporters for further handling. Depending on the exporter the message can be processed differenlty.
 
 ## Developing
 
@@ -53,14 +53,14 @@ To run the formatting, linting and testing execute the following scripts:
 ./script/test
 ```
 
-We  currenlty require a high code coverage. So make sure you add tests when you create a client.
+We  currenlty require a high code coverage. So make sure you add tests when you create a exporter.
 
-## Creating a new client
+## Creating a new exporter
 
-The steps to create a new client are faily simple.
+The steps to create a new exporter are faily simple.
 
-1. copy the [dummy client](../blob/main/app/clients/dummy.py) in the app/clients/ folder.
-2. change the [dummy client](../blob/main/app/clients/factory.py) to include the client with a special client_id
-3. configure the application to use the client_id by setting the config CLIENT_IDS
+1. copy the [dummy exporter](../blob/main/app/exporters/dummy.py) in the app/exporters/ folder.
+2. change the [dummy exporter](../blob/main/app/exporters/factory.py) to include the exporter with a special exporter_id
+3. configure the application to use the exporter_id by setting the config EXPORTER_IDS
 
-after you the client does what you want add a test in tests/clients/ and write some documentation for the client in /docs/. After you are done create a PR in the github repository. Now just wait for it to be approved :D.
+after you the exporter does what you want add a test in tests/exporters/ and write some documentation for the exporter in /docs/. After you are done create a PR in the github repository. Now just wait for it to be approved :D.

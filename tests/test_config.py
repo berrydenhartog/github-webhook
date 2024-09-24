@@ -8,7 +8,7 @@ def test_settings():
 
     assert not settings.DEBUG
     assert settings.LOGGING_LEVEL == "INFO"
-    assert settings.CLIENT_IDS == ["dummy"]
+    assert settings.EXPORTER_IDS == ["dummy"]
     assert settings.WEBHOOK_SECRET == "dummysecret"  # noqa: S105
 
 
@@ -20,15 +20,15 @@ def test_settings_logging_level_error():
 
 
 def test_settings_clientid():
-    settings = Settings(CLIENT_IDS="mattermost")
+    settings = Settings(EXPORTER_IDS="mattermost")
 
-    assert settings.CLIENT_IDS == "mattermost"
+    assert settings.EXPORTER_IDS == "mattermost"
 
 
 def test_settings_clientids():
-    settings = Settings(CLIENT_IDS=["mattermost", "dummy"])
+    settings = Settings(EXPORTER_IDS=["mattermost", "dummy"])
 
-    assert settings.CLIENT_IDS == ["mattermost", "dummy"]
+    assert settings.EXPORTER_IDS == ["mattermost", "dummy"]
 
 
 def test_settings_event_formats():

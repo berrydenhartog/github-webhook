@@ -10,7 +10,6 @@ class MyappValidationException(ValidationException):
         super().__init__(errors)
 
 
-class MyappValueClientError(ValueError):
-    def __init__(self, client: str) -> None:  # pragma: no cover
-        self.client = f"Unknown client: {client}"
-        super().__init__(client)
+class MyappValueExporterError(ValueError):
+    def __init__(self, exporter: str) -> None:  # pragma: no cover
+        super().__init__(f"Unknown exporter: {exporter}")

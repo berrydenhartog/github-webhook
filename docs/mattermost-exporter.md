@@ -1,8 +1,8 @@
-# Mattermost client
+# Mattermost exporter
 
-The Mattermost Client sends messages to a mattermost [incoming webhook](https://developers.mattermost.com/integrate/webhooks/incoming/). Mattermost is a chat application.
+The Mattermost Exporter sends messages to a mattermost [incoming webhook](https://developers.mattermost.com/integrate/webhooks/incoming/). Mattermost is a chat application.
 
-The client has the client_id: 'mattermost'
+The exporter has the exporter_id: 'mattermost'
 
 Options can be configured as environmental variable os in a mattermost.yaml config file. If the file is used you can ommit the MATERMOST_ from the options.
 

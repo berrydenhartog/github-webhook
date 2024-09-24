@@ -7,6 +7,6 @@ services:
     environment:
       - WEBHOOK_SECRET=dummysecret
       - MATTERMOST_URL=https://httpbin.org/post
-      - CLIENT_IDS=mattermost
+      - EXPORTER_IDS=mattermost
       - DEBUG=True
       - LOGGING_LEVEL=DEBUG
