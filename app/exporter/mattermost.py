@@ -5,12 +5,12 @@ from pydantic import BaseModel, field_validator
 from pydantic.networks import HttpUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .baseclient import BaseClient
+from .baseexporter import BaseExporter
 
 logger = logging.getLogger(__name__)
 
 
-class MattermostclientSettings(BaseSettings):
+class MattermostexporterSettings(BaseSettings):
     model_config = SettingsConfigDict(
         extra="ignore", env_file="mattermost.env", yaml_file="mattermost.yaml", env_prefix="MATTERMOST_"
     )
@@ -46,11 +46,11 @@ class MattermostWebhookModel(BaseModel):
         return v  # pragma: no cover
 
 
-class MattermostClient(BaseClient):
+class MattermostExporter(BaseExporter):
     def __init__(self, retries: int = 5, timeout: int = 1) -> None:
-        self.settings = MattermostclientSettings()  # type: ignore
+        self.settings = MattermostexporterSettings()  # type: ignore
         self.transport = httpx.AsyncHTTPTransport(retries=retries)
-        self.client = httpx.AsyncClient(transport=self.transport, timeout=timeout)
+        self.exporter = httpx.AsyncClient(transport=self.transport, timeout=timeout)
 
     async def handle_event(self, event: str, data: str) -> None:
         channel = None
@@ -64,7 +64,7 @@ class MattermostClient(BaseClient):
 
         logger.debug(f"Sending message to Mattermost: {mater_most_model.model_dump()}")
 
-        response = await self.client.post(str(self.settings.URL), json=mater_most_model.model_dump())
+        response = await self.exporter.post(str(self.settings.URL), json=mater_most_model.model_dump())
 
         logger.debug(f"Response from Mattermost: {response.status_code}")
 

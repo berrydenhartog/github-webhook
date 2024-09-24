@@ -6,7 +6,6 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 
-from .clients import client_factory
 from .config import get_settings
 from .constants import DEFAULT_EVENT_FORMATS
 from .eventhandlers import (
@@ -16,6 +15,7 @@ from .eventhandlers import (
     handle_format_event,
     handle_unknown_event,
 )
+from .exporter import exporter_factory
 from .log import setup_logging
 from .middleware.security import SecurityMiddleware
 from .security import verify_signature
@@ -32,7 +32,7 @@ def create_app() -> FastAPI:  # noqa: C901
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.secret_token = settings.WEBHOOK_SECRET
-        app.state.clients = client_factory(settings.CLIENT_IDS)
+        app.state.exporters = exporter_factory(settings.EXPORTER_IDS)
         app.state.event_header = settings.EVENT_HEADER
         app.state.event_formats = DEFAULT_EVENT_FORMATS | settings.EVENT_FORMATS
         app.state.event_filters = settings.EVENT_FILTERS
@@ -44,7 +44,7 @@ def create_app() -> FastAPI:  # noqa: C901
         logger.info(f"Version:       {VERSION}")
         logger.info(f"Debug:         {settings.DEBUG}")
         logger.info(f"Logging level: {settings.LOGGING_LEVEL}")
-        logger.info(f"Client IDs:    {settings.CLIENT_IDS}")
+        logger.info(f"Exporter IDs:    {settings.EXPORTER_IDS}")
         logger.info(f"Event header:  {settings.EVENT_HEADER}")
         logger.info(f"Event Filter Allow :  {len(settings.EVENT_FILTERS.get('ALLOW', []))}")
         logger.info(f"Event Filter Deny :  {len(settings.EVENT_FILTERS.get('DENY', []))}")
@@ -86,7 +86,7 @@ def create_app() -> FastAPI:  # noqa: C901
         msg = await handle_format_event(event_type, app.state.event_formats, json_data)
 
         handler = DEFAULT_EVENT_HANDLERS.get(event_type, handle_unknown_event)
-        await handler(event_type, app.state.clients, msg)
+        await handler(event_type, app.state.exporters, msg)
 
     @app.get("/health", status_code=status.HTTP_200_OK)
     async def health() -> Response:  # type: ignore

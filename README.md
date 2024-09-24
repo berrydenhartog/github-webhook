@@ -27,9 +27,9 @@ To use this application, simply deploy the pre-packaged container and configure 
 
 ### App Config
 
-This application is configured using environment variables and/or YAML files, which control both the application's behavior and client settings. Each system you wish to connect to has its own dedicated YAML configuration file. By default, the application uses a dummy client, which discards incoming messages.
+This application is configured using environment variables and/or YAML files, which control both the application's behavior and exporter settings. Each system you wish to connect to has its own dedicated YAML configuration file. By default, the application uses a dummy exporter, which discards incoming messages.
 
-See [options](/docs/options.md) for all application options. For client settings see the specific [clients](#clients) documentation.
+See [options](/docs/options.md) for all application options. For exporter settings see the specific [exporters](#exporters) documentation.
 
 
 ### GitHub config
@@ -68,15 +68,15 @@ After you have deployed this application you need to configure the github webhoo
 
 See [deploy](/docs/deploy.md)
 
-## Clients
+## Exporters
 
-You can develop your own client or use one of the exising clients.
+You can develop your own exporter or use one of the exising exporters.
 
-- [mattermost](./docs/mattermost-client.md): sends the event to a mattermost webhook
-- [dummy](./docs/dummy-client.md): Does nothing with the event. DEFAULT
+- [mattermost](./docs/mattermost-exporter.md): sends the event to a mattermost webhook
+- [dummy](./docs/dummy-exporter.md): Does nothing with the event. DEFAULT
 - todo: add more
 
-If you would like to add another client see the [How to Contribute](#How to Contribute)
+If you would like to add another exporter see the [How to Contribute](#How to Contribute)
 
 ## How to Contribute
 

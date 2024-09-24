@@ -5,9 +5,9 @@ import jq
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .clients import Clients
 from .constants import FilterType, PermissionType
 from .exceptions import MyappValidationException
+from .exporter import Exporters
 
 
 class Settings(BaseSettings):
@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     LOGGING_LEVEL: str = "INFO"
     DEBUG: bool = False
-    CLIENT_IDS: list[Clients] | Clients = ["dummy"]
+    EXPORTER_IDS: list[Exporters] | Exporters = ["dummy"]
     WEBHOOK_SECRET: str | None = None
     EVENT_FORMATS: dict[str, str] = {}
     EVENT_HEADER: str = "x-github-event"

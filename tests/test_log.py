@@ -35,4 +35,4 @@ def test_logging_level_debug(client: TestClient, caplog: pytest.LogCaptureFixtur
     assert caplog.records[4].name == "app.main"
     assert caplog.records[5].name == "app.eventhandlers"
     assert caplog.records[6].name == "app.eventhandlers"
-    assert caplog.records[7].name == "app.clients.dummy"
+    assert caplog.records[7].name == "app.exporter.dummy"

@@ -17,8 +17,12 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            - name: CLIENT_IDS
+            - name: EXPORTER_IDS
               value: mattermost
+            - name: MATTERMOST_DEFAULT_CHANNEL
+              value: project
+            - name: LOGGING_LEVEL
+              value: DEBUG
             - name: MATTERMOST_URL
               valueFrom:
                 secretKeyRef:

@@ -8,16 +8,6 @@ body:
         # Thank you for opening a feature request.
 
   - type: textarea
-    id: version
-    attributes:
-      label: Version
-      description: Specify the version of the software that you use
-      placeholder: 0.1.0
-      value:
-    validations:
-      required: true
-
-  - type: textarea
     id: use-case
     attributes:
       label: Use Cases

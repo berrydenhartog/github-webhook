@@ -8,16 +8,16 @@ The application can be configured using either environmental variables or a conf
 |---|---|---|
 | LOGGING_LEVEL  | Default logging level  | INFO  |
 | DEBUG  | debugging mode   |  False  |
-| CLIENT_IDS  | List of clients to enable  | dummy  |
+| EXPORTER_IDS  | List of exporters to enable  | dummy  |
 | WEBHOOK_SECRET  | secret to use when verifying request   | None |
 | EVENT_FORMATS  | dictionary describing how to format a dict to a message  | {}  |
 | EVENT_HEADER  | the header to extract the type of event  | x-github-event |
 | EVENT_FILTERS  | dictionary describing the filter to apply on the json data | {}  |
 | EVENT_TYPE_FILTERS  | dictionary describing the filter to apply on the event type from EVENT_HEADER | {}  |
 
-## Client IDs
+## Exporter IDs
 
-The application supports pluggable clients. To find a client check the [clients](../README.md#clients
+The application supports pluggable exporters. To find a exporter check the [exporters](../README.md#exporters
 )
 
 ## Secret
@@ -76,7 +76,7 @@ To explain how it works we use the following input json and describe some exampl
 }
 ```
 
-ALLOW filters allow you can always forward the message to a client. Is has precedeence over a deny filter. The bellow examples would both allow the example json to pass. The first is a normal compare and the second uses regex.
+ALLOW filters allow you can always forward the message to a exporter. Is has precedeence over a deny filter. The bellow examples would both allow the example json to pass. The first is a normal compare and the second uses regex.
 
 ```json
 {

@@ -8,8 +8,8 @@ from typing import Any
 import jq
 from fastapi import HTTPException, status
 
-from .clients import BaseClient
 from .constants import FilterType, PermissionType
+from .exporter import BaseExporter
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +82,7 @@ async def handle_format_event(event_type: str, event_formats: dict[str, str], da
     try:
         msg = template.format(**data) if template else str(data)
     except KeyError as e:
+        logger.warning(f"Missing data for event {event_type}: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Missing data for event {event_type}: {e}"
         ) from e
@@ -89,20 +90,20 @@ async def handle_format_event(event_type: str, event_formats: dict[str, str], da
     return msg
 
 
-async def handle_generic_event(event_type: str, clients: list[BaseClient], data: str) -> None:
+async def handle_generic_event(event_type: str, exporters: list[BaseExporter], data: str) -> None:
     logger.debug(f"Event {event_type} parsed mesage: {data}")
 
-    tasks = [client.handle_event(event_type, data) for client in clients]
+    tasks = [exporter.handle_event(event_type, data) for exporter in exporters]
     await asyncio.gather(*tasks)
 
 
-async def handle_unknown_event(event: str, client: list[BaseClient], data: str) -> None:
+async def handle_unknown_event(event: str, exporters: list[BaseExporter], data: str) -> None:
     logger.warning(f"Unknown event {event}: {data}")
 
-    await handle_generic_event(event, client, data)
+    await handle_generic_event(event, exporters, data)
 
 
-DEFAULT_EVENT_HANDLERS: dict[str, Callable[[str, list[BaseClient], str], Awaitable[None]]] = {
+DEFAULT_EVENT_HANDLERS: dict[str, Callable[[str, list[BaseExporter], str], Awaitable[None]]] = {
     "branch_protection_configuration": handle_generic_event,
     "branch_protection_rule": handle_generic_event,
     "check_run": handle_generic_event,
