@@ -1,15 +1,18 @@
 import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import HTTPException
-from fastapi.responses import JSONResponse, PlainTextResponse, Response
+from fastapi.responses import JSONResponse, Response
 
 from .config import get_settings
 from .constants import DEFAULT_EVENT_FORMATS
+from .enricher import enricher_factory
 from .eventhandlers import (
     DEFAULT_EVENT_HANDLERS,
+    handle_enrich_event,
     handle_filter_event,
     handle_filter_event_type,
     handle_format_event,
@@ -23,7 +26,7 @@ from .security import verify_signature
 VERSION = "dev"
 
 
-def create_app() -> FastAPI:  # noqa: C901
+def create_app() -> FastAPI:
     settings = get_settings()  # type: ignore[reportCallIssue]
 
     setup_logging(settings.LOGGING_LEVEL)
@@ -33,6 +36,7 @@ def create_app() -> FastAPI:  # noqa: C901
     async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         app.state.secret_token = settings.WEBHOOK_SECRET
         app.state.exporters = exporter_factory(settings.EXPORTER_IDS)
+        app.state.enrichers = enricher_factory(settings.ENRICHER_IDS)
         app.state.event_header = settings.EVENT_HEADER
         app.state.event_formats = DEFAULT_EVENT_FORMATS | settings.EVENT_FORMATS
         app.state.event_filters = settings.EVENT_FILTERS
@@ -44,6 +48,7 @@ def create_app() -> FastAPI:  # noqa: C901
         logger.info(f"Version:       {VERSION}")
         logger.info(f"Debug:         {settings.DEBUG}")
         logger.info(f"Logging level: {settings.LOGGING_LEVEL}")
+        logger.info(f"Enricher IDs:    {settings.ENRICHER_IDS}")
         logger.info(f"Exporter IDs:    {settings.EXPORTER_IDS}")
         logger.info(f"Event header:  {settings.EVENT_HEADER}")
         logger.info(f"Event Filter Allow :  {len(settings.EVENT_FILTERS.get('ALLOW', []))}")
@@ -69,7 +74,7 @@ def create_app() -> FastAPI:  # noqa: C901
         if content_type != "application/json":
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid content-type")
 
-        json_data = await request.json()
+        json_data: dict[str, Any] = await request.json()
 
         logger.debug(f"request data: {json_data}")
 
@@ -83,6 +88,8 @@ def create_app() -> FastAPI:  # noqa: C901
             logger.debug(f"Event {event_type} filtered out")
             return JSONResponse(status_code=status.HTTP_200_OK, content={"status": "filtered"})
 
+        json_data = await handle_enrich_event(event_type, app.state.enrichers, json_data)
+
         msg = await handle_format_event(event_type, app.state.event_formats, json_data)
 
         handler = DEFAULT_EVENT_HANDLERS.get(event_type, handle_unknown_event)
@@ -91,12 +98,6 @@ def create_app() -> FastAPI:  # noqa: C901
     @app.get("/health", status_code=status.HTTP_200_OK)
     async def health() -> Response:  # type: ignore
         return JSONResponse(content={"status": "ok"})
-
-    @app.get("/robots.txt", response_class=PlainTextResponse)
-    async def robots_txt() -> PlainTextResponse:  # type: ignore
-        content = """User-agent: *
-Disallow: /"""
-        return PlainTextResponse(content=content)
 
     return app
 

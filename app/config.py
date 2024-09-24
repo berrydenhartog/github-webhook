@@ -6,6 +6,7 @@ from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from .constants import FilterType, PermissionType
+from .enricher import Enrichers
 from .exceptions import MyappValidationException
 from .exporter import Exporters
 
@@ -16,6 +17,7 @@ class Settings(BaseSettings):
     LOGGING_LEVEL: str = "INFO"
     DEBUG: bool = False
     EXPORTER_IDS: list[Exporters] | Exporters = ["dummy"]
+    ENRICHER_IDS: list[Enrichers] | Enrichers = []
     WEBHOOK_SECRET: str | None = None
     EVENT_FORMATS: dict[str, str] = {}
     EVENT_HEADER: str = "x-github-event"

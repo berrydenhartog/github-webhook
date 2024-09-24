@@ -9,6 +9,7 @@ import jq
 from fastapi import HTTPException, status
 
 from .constants import FilterType, PermissionType
+from .enricher import BaseEnricher
 from .exporter import BaseExporter
 
 logger = logging.getLogger(__name__)
@@ -72,6 +73,17 @@ async def handle_filter_event(
     data: dict[str, str | object],
 ) -> bool:
     return filter_event(filters, data)
+
+
+async def handle_enrich_event(
+    event_type: str,
+    enirchers: list[BaseEnricher],
+    data: dict[str, Any],
+) -> dict[str, Any]:
+    for enricher in enirchers:
+        await enricher.handle_event(event_type, data)
+
+    return data
 
 
 async def handle_format_event(event_type: str, event_formats: dict[str, str], data: dict[str, str | object]) -> str:

@@ -13,3 +13,8 @@ class MyappValidationException(ValidationException):
 class MyappValueExporterError(ValueError):
     def __init__(self, exporter: str) -> None:  # pragma: no cover
         super().__init__(f"Unknown exporter: {exporter}")
+
+
+class MyappValueEnricherError(ValueError):
+    def __init__(self, enricher: str) -> None:  # pragma: no cover
+        super().__init__(f"Unknown enricher: {enricher}")
