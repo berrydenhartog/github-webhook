@@ -1,9 +1,9 @@
 -r requirements.txt
-pyright==1.1.382.post1
-ruff==0.6.8
+pyright==1.1.383
+ruff==0.6.9
 pytest==8.3.3
 coverage==7.6.1
 pytest==8.3.3
 coverage==7.6.1
-pre-commit==3.8.0
+pre-commit==4.0.0
 pytest-mock==3.14.0
