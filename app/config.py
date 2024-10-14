@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     LOGGING_LEVEL: str = "INFO"
     DEBUG: bool = False
-    EXPORTER_IDS: list[Exporters] | Exporters = ["dummy"]
+    EXPORTER_IDS: list[Exporters] | Exporters = ["dummy"]  # type: ignore
     ENRICHER_IDS: list[Enrichers] | Enrichers = []
     WEBHOOK_SECRET: str | None = None
     EVENT_FORMATS: dict[str, str] = {}
