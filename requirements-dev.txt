@@ -1,6 +1,6 @@
 -r requirements.txt
-pyright==1.1.387
-ruff==0.7.2
+pyright==1.1.388
+ruff==0.7.3
 pytest==8.3.3
 coverage==7.6.4
 pytest==8.3.3
