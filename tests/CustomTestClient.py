@@ -35,10 +35,11 @@ class CustomTestClient(TestClient):
         # Extract the payload body from the request
 
         if json is not None:
-            payload_body = jsondump(json).encode("utf-8")
+            payload_body = jsondump(json, separators=(",", ":")).encode("utf-8")
+            secret_token = self.secret_token.encode("utf-8")
 
             # Calculate the hash
-            hash_object = hmac.new(self.secret_token.encode("utf-8"), msg=payload_body, digestmod=hashlib.sha256)
+            hash_object = hmac.new(secret_token, msg=payload_body, digestmod=hashlib.sha256)
             expected_signature = "sha256=" + hash_object.hexdigest()
 
             # Add the hash to the headers

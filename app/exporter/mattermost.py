@@ -33,14 +33,14 @@ class MattermostWebhookModel(BaseModel):
 
     @field_validator("type")
     @classmethod
-    def check_type(cls, v: str) -> str:  # noqa: ANN102
+    def check_type(cls, v: str) -> str:
         if not v.startswith("custom_"):  # pragma: no cover
             raise ValueError()
         return v  # pragma: no cover
 
     @field_validator("priority")
     @classmethod
-    def check_priority(cls, v: str) -> str:  # noqa: ANN102
+    def check_priority(cls, v: str) -> str:
         if v not in ("urgent", "important", "standard"):  # pragma: no cover
             raise ValueError()
         return v  # pragma: no cover
