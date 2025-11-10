@@ -1,4 +1,4 @@
-fastapi[standard]==0.115.11
+fastapi[standard]==0.121.1
 httpx==0.28.1
-pydantic-settings==2.8.1
-jq==1.8.0
+pydantic-settings==2.11.0
+jq==1.10.0
